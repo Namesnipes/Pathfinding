@@ -1,7 +1,8 @@
-const COLS = 128;
-const ROWS = 128;
-const width = 800;
-const height = 800;
+const COLS = 16;
+const ROWS = 16;
+const windowRatio = window.innerHeight / window.innerWidth;
+const width = (window.innerWidth * windowRatio) * 0.9;
+const height = (window.innerHeight) * 0.9;
 const stepSizeX = width / COLS;
 const stepSizeY = height / ROWS;
 
