@@ -27,9 +27,9 @@ class Node{
     static resetAllColors(nodes){
         for (let node = 0; node < nodes.length; node += 1) {
             if(nodes[node].walkable){
-                nodes[node].color = color(255,255,255)
+                nodes[node].setColor(color(255,255,255))
             } else{
-                nodes[node].color = color(0,0,0)
+                nodes[node].setColor(color(0,0,0))
             }
         }
     }
@@ -41,13 +41,28 @@ class Node{
         this.screenX = x * stepSizeX;
         this.screenY = y * stepSizeY;
         this.neighbors = [];
-        this.color = color(255,255,255);
         this.heuristic = 0;
-        this.walkable = true
+        this.walkable = Math.random() > 0.25 ? true : false
+        if(this.walkable){
+            this.color = color(255,255,255);
+        } else{
+            this.color = color(0,0,0)
+        }
+    }
+
+    setColor(color){
+        if(this.color.levels[0] !== color.levels[0] || this.color.levels[1] !== color.levels[1] || this.color.levels[2] !== color.levels[2]){
+            this.color = color
+            this.display()
+        }
     }
 
     getNeighbors(){
         return this.neighbors;
+    }
+
+    setNeighbors(neighbors){
+        this.neighbors = neighbors;
     }
 
     calculateNeighbors(nodes){
@@ -68,7 +83,7 @@ class Node{
         let y1 = this.y;
         let x2 = goal.x;
         let y2 = goal.y;
-        let distance = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2); //todo: remove sqrt when done
+        let distance = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)); //todo: remove sqrt when done
         this.h = distance;
     }
 
@@ -84,6 +99,7 @@ class Node{
     }
 
     display(){
+        console.log("okay")
         fill(this.color);
         square(this.screenX, this.screenY, stepSizeX);
         fill(0);
@@ -92,6 +108,6 @@ class Node{
         line(this.screenX, this.screenY + stepSizeY, this.screenX + stepSizeX, this.screenY + stepSizeY);// bottom line
         line(this.screenX, this.screenY, this.screenX, this.screenY + stepSizeY);// left line
         line(this.screenX + stepSizeX, this.screenY, this.screenX + stepSizeX, this.screenY + stepSizeY);// right line
-        text(this.num,this.screenX + stepSizeX/2,this.screenY + stepSizeY/2)
+        //text(this.num,this.screenX + stepSizeX/2,this.screenY + stepSizeY/2)
     }
 }

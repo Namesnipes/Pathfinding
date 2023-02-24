@@ -1,14 +1,15 @@
-const COLS = 16;
-const ROWS = 16;
+const COLS = 128;
+const ROWS = 128;
 const width = 800;
 const height = 800;
 const stepSizeX = width / COLS;
 const stepSizeY = height / ROWS;
 
 let nodes = [];
+let path = [];
+let pathChanged = true;
 let startNode = null
 let endNode = null;
-let attemptedSolveOnThisMaze = false
 
 function setup() {
     createCanvas(width, height);
@@ -19,32 +20,41 @@ function setup() {
     }
     //run calculations on nodes
     for(let node = 0; node < (ROWS * COLS); node++) {
-        nodes[node].calculateNeighbors(nodes);
+        // add neighbors around node
+        let possible_neighbors = []
+        for(let x = -1; x < 2; x++){
+            for(let y = -1; y < 2; y++){
+                let nodeX = Node.getXYCoordFromNode(node)[0] + x;
+                let nodeY = Node.getXYCoordFromNode(node)[1] + y;
+                if(nodeX >= 0 && nodeX < COLS && nodeY >= 0 && nodeY < ROWS && nodes[Node.getNodeFromXYCoord(nodeX, nodeY)] != nodes[node]){
+                    possible_neighbors.push(nodes[Node.getNodeFromXYCoord(nodeX, nodeY)]);
+                }
+            }
+        }
+        nodes[node].setNeighbors(possible_neighbors);
         nodes[node].calculateHeuristic(nodes[nodes.length-1]);
     }
 
     startNode = nodes[0]
     endNode = nodes[nodes.length-1]
+    Node.displayAll(nodes)
   }
   
   function draw() {
-    background(220);
-
-    if(!attemptedSolveOnThisMaze){
+    if(pathChanged){
         let startTime = performance.now()
-        let path = aStar(startNode,endNode)
+        path = aStar(startNode,endNode)
         console.log("solving took " + (performance.now() - startTime) + " ms")
         if(path){
             for (let i = 0; i < path.length; i++) {
                 const node = path[i];
-                node.color = color(0,255,0)
+                node.setColor(color(0,255,0))
             }
         }
     }
-    attemptedSolveOnThisMaze = true
-    startNode.color = color(0,100,0)
-    endNode.color = color(255,0,0)
-    Node.displayAll(nodes)
+    pathChanged = false;
+    startNode.setColor(color(0,100,0))
+    endNode.setColor(color(255,0,0))
   }
 
 
@@ -79,9 +89,13 @@ function mouseDragged(){
         if(mouseIsPressed){
             if(clickedNode.walkable){
                 clickedNode.walkable = false
-                clickedNode.color = color(0,0,0)
-                Node.resetAllColors(nodes)
+                clickedNode.setColor(color(0,0,0))
+                if(path && path.includes(clickedNode)){
+                    Node.resetAllColors(path)
+                    pathChanged = true;
+                }
                 attemptedSolveOnThisMaze = false
+                clickedNode.display()
             }
         }
     }
@@ -146,6 +160,7 @@ function aStar(startNode, endNode){
                 searchingNode.g = Node.g(searchingNode,currentNode)
                 searchingNode.calculateHeuristic(endNode)
                 searchingNode.f = searchingNode.g + searchingNode.h
+                //searchingNode.setColor(color(0,0,searchingNode.f/16 * 255))
                 searchingNode.parent = currentNode
             }
 
