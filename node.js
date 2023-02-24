@@ -42,7 +42,7 @@ class Node{
         this.screenY = y * stepSizeY;
         this.neighbors = [];
         this.heuristic = 0;
-        this.walkable = Math.random() > 0.25 ? true : false
+        this.walkable = true
         if(this.walkable){
             this.color = color(255,255,255);
         } else{
