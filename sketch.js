@@ -1,10 +1,10 @@
-const COLS = 16;
-const ROWS = 16;
-const windowRatio = window.innerHeight / window.innerWidth;
-const width = (window.innerWidth * windowRatio) * 0.9;
-const height = (window.innerHeight) * 0.9;
-const stepSizeX = width / COLS;
-const stepSizeY = height / ROWS;
+const COLS = 32;
+const ROWS = 32;
+const windowRatio = window.innerHeight / window.innerWidth; //TODO: make the canvas exactly fit each pixel TODOTODO: canvas doesnt fit each pixel because stepsizes are floored
+const width = Math.floor((window.innerWidth * windowRatio) * 0.9);
+const height = Math.floor((window.innerHeight) * 0.9);
+const stepSizeX = Math.floor(width / COLS);
+const stepSizeY = Math.floor(height / ROWS);
 
 let nodes = [];
 let path = [];

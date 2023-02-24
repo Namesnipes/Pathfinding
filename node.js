@@ -101,13 +101,15 @@ class Node{
     display(){
         console.log("okay")
         fill(this.color);
+        //rect(this.screenX, this.screenY, stepSizeX, stepSizeY);
+
         square(this.screenX, this.screenY, stepSizeX);
-        fill(0);
-        stroke(0);
-        line(this.screenX, this.screenY, this.screenX + stepSizeX, this.screenY);// top line
-        line(this.screenX, this.screenY + stepSizeY, this.screenX + stepSizeX, this.screenY + stepSizeY);// bottom line
-        line(this.screenX, this.screenY, this.screenX, this.screenY + stepSizeY);// left line
-        line(this.screenX + stepSizeX, this.screenY, this.screenX + stepSizeX, this.screenY + stepSizeY);// right line
+        //fill(0);
+        //stroke(0);
+        //line(this.screenX, this.screenY, this.screenX + stepSizeX, this.screenY);// top line
+        //line(this.screenX, this.screenY + stepSizeY, this.screenX + stepSizeX, this.screenY + stepSizeY);// bottom line
+        //line(this.screenX, this.screenY, this.screenX, this.screenY + stepSizeY);// left line
+        //line(this.screenX + stepSizeX, this.screenY, this.screenX + stepSizeX, this.screenY + stepSizeY);// right line
         //text(this.num,this.screenX + stepSizeX/2,this.screenY + stepSizeY/2)
     }
 }
