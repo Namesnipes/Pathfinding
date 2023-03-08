@@ -5,7 +5,7 @@ class Node{
         let y1 = to.y;
         let x2 = from.x;
         let y2 = from.y;
-        return from.g + Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+        return from.g + (Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)));
     }
 
     static getNodeFromXYCoord(x,y){
@@ -34,6 +34,15 @@ class Node{
         }
     }
 
+    static resetSets(nodes){
+        for (let node = 0; node < nodes.length; node += 1) {
+            nodes[node].openSet = false;
+            nodes[node].closedSet = false;
+            nodes[node].g = 0;
+            nodes[node].f = 0;
+        }
+    }
+
     constructor(num,x,y){
         this.num = num;
         this.x = x;
@@ -42,7 +51,8 @@ class Node{
         this.screenY = y * stepSizeY;
         this.neighbors = [];
         this.heuristic = 0;
-        this.walkable = true
+        this.walkable = true;
+        this.f = 0;
         if(this.walkable){
             this.color = color(255,255,255);
         } else{
@@ -79,12 +89,14 @@ class Node{
     }
 
     calculateHeuristic(goal){
-        let x1 = this.x;
-        let y1 = this.y;
-        let x2 = goal.x;
-        let y2 = goal.y;
-        let distance = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)); //todo: remove sqrt when done
-        this.h = distance;
+        if(!this.h){
+            let x1 = this.x;
+            let y1 = this.y;
+            let x2 = goal.x;
+            let y2 = goal.y;
+            let distance = Math.abs(x1-x2) + Math.abs(y1-y2); //todo: remove sqrt when done
+            this.h = distance;
+        }
     }
 
     colorNeighbours(color){
@@ -99,7 +111,7 @@ class Node{
     }
 
     display(){
-        console.log("okay")
+        noStroke();
         fill(this.color);
         //rect(this.screenX, this.screenY, stepSizeX, stepSizeY);
 

@@ -1,5 +1,5 @@
-const COLS = 32;
-const ROWS = 32;
+const COLS = 64;
+const ROWS = 64;
 const windowRatio = window.innerHeight / window.innerWidth; //TODO: make the canvas exactly fit each pixel TODOTODO: canvas doesnt fit each pixel because stepsizes are floored
 const width = Math.floor((window.innerWidth * windowRatio) * 0.9);
 const height = Math.floor((window.innerHeight) * 0.9);
@@ -7,6 +7,7 @@ const stepSizeX = Math.floor(width / COLS);
 const stepSizeY = Math.floor(height / ROWS);
 
 let nodes = [];
+let priorityQueue = new PriorityQueue(function(){return this.val.f})
 let path = [];
 let pathChanged = true;
 let startNode = null
@@ -17,7 +18,8 @@ function setup() {
     //create nodes
     for(let node = 0; node < (ROWS * COLS); node++) {
         let coords = Node.getXYCoordFromNode(node);
-        nodes.push(new Node(node,coords[0], coords[1]));
+        let newNode = new Node(node,coords[0], coords[1])
+        nodes.push(newNode);
     }
     //run calculations on nodes
     for(let node = 0; node < (ROWS * COLS); node++) {
@@ -27,6 +29,7 @@ function setup() {
             for(let y = -1; y < 2; y++){
                 let nodeX = Node.getXYCoordFromNode(node)[0] + x;
                 let nodeY = Node.getXYCoordFromNode(node)[1] + y;
+                if(Math.abs(x) + Math.abs(y) > 1) {continue}
                 if(nodeX >= 0 && nodeX < COLS && nodeY >= 0 && nodeY < ROWS && nodes[Node.getNodeFromXYCoord(nodeX, nodeY)] != nodes[node]){
                     possible_neighbors.push(nodes[Node.getNodeFromXYCoord(nodeX, nodeY)]);
                 }
@@ -43,9 +46,15 @@ function setup() {
   
   function draw() {
     if(pathChanged){
-        let startTime = performance.now()
-        path = aStar(startNode,endNode)
-        console.log("solving took " + (performance.now() - startTime) + " ms")
+        Node.resetSets(nodes)
+        path2 = aStar(startNode,endNode)
+        Node.resetSets(nodes)
+        path = aTestStar2(startNode,endNode,priorityQueue)
+        console.log(getPathLength(path) === getPathLength(path2), getPathLength(path), getPathLength(path2))
+        if(getPathLength(path) !== getPathLength(path2)){
+            debugger
+            aTestStar2(startNode,endNode,priorityQueue)
+        }
         if(path){
             for (let i = 0; i < path.length; i++) {
                 const node = path[i];
@@ -58,6 +67,22 @@ function setup() {
     endNode.setColor(color(255,0,0))
   }
 
+  function getPathLength(path){
+    var sum = 0;
+    for(let i = 0; i < path.length - 1; i++){
+        const node = path[i];
+        const node2 = path[i+1];
+        const x1 = node.x;
+        const y1 = node.y;
+        const x2 = node2.x;
+        const y2 = node2.y;
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        sum += distance;
+  }
+  return Math.round(sum * 100) / 100;
+}
 
 let currentClickedNode = null;
 function getNodeFromScreenCoords(sx,sy){
@@ -71,16 +96,35 @@ function getNodeFromScreenCoords(sx,sy){
 function mouseClicked(){
     let clickedNode = getNodeFromScreenCoords(mouseX,mouseY)
     if(clickedNode != undefined) {
-        //Node.resetAllColors(nodes)
-        //endNode = clickedNode;
+        console.log(clickedNode)
     }
 }
 function doubleClicked(){
     let clickedNode = getNodeFromScreenCoords(mouseX,mouseY)
     if(clickedNode != undefined) {
-        //clickedNode.walkable = false
-        //clickedNode.color = color(0,0,0)
-        //Node.resetAllColors(nodes)
+        console.log("tmiing start")
+        var iterations = 1;
+
+        console.time('base');
+        for(var i = 0; i < iterations; i++ ){
+            Node.resetSets(nodes)
+            aStar(startNode,endNode)
+        };
+        console.timeEnd('base')
+
+        console.time('new');
+        for(var i = 0; i < iterations; i++ ){
+            Node.resetSets(nodes)
+            aTestStar(startNode,endNode)
+        };
+        console.timeEnd('new')
+
+        console.time('newer');
+        for(var i = 0; i < iterations; i++ ){
+            Node.resetSets(nodes)
+            aTestStar2(startNode,endNode,priorityQueue)
+        };
+        console.timeEnd('newer')
     }
 }
 
@@ -163,6 +207,149 @@ function aStar(startNode, endNode){
                 searchingNode.f = searchingNode.g + searchingNode.h
                 //searchingNode.setColor(color(0,0,searchingNode.f/16 * 255))
                 searchingNode.parent = currentNode
+            }
+
+        }
+    }
+}
+
+function g(to,from){
+    return from.g + (10 || (((Math.abs(from.x-to.x) + Math.abs(from.y-to.y)) == 2) && 14));
+}
+
+function calculateHeuristic2(from,goal){
+    if(!from.h){
+        from.h = Math.abs(goal.x-from.x) + Math.abs(goal.y-from.y);
+    }
+}
+
+function aTestStar(startNode, endNode){
+    //init open sets with startNode
+    let openSet = [startNode];
+    openSet[0].f = openSet[0].g = 0;
+    let closedSet = [];
+
+    //loop until openset is empty
+    while(openSet.length > 0){
+
+        //get node with lowest f value
+        let lowest = openSet[0].f
+        let currentNode = openSet[0];
+        let currentIndex = 0;
+        for(let i = 1; i < openSet.length; i++){ //708ms //todo priority queue
+            if(openSet[i].f < lowest){           //3878ms
+                lowest = openSet[i].f
+                currentNode = openSet[i]
+                currentIndex = i
+            }
+        }
+        //move node to closedSet
+        currentNode.closedSet = true
+        currentNode.openSet = false;
+        closedSet.push(currentNode)
+        openSet.splice(currentIndex,1);             //648ms
+
+        //we found the goal
+        if(currentNode === endNode){
+            let ancestorNode = currentNode
+            let path = [ancestorNode]
+            while(ancestorNode.parent != null){
+                path.push(ancestorNode.parent)
+                ancestorNode = ancestorNode.parent
+            }
+            return path;
+        }
+
+
+        let adjacents = currentNode.neighbors
+        //loop through adjacent nodes
+        for(let i = 0; i < adjacents.length; i++){
+            let searchingNode = adjacents[i]
+            if(searchingNode.closedSet || !searchingNode.walkable) continue //747ms
+            //if adjacent node is in the openset, see if the path to it is better
+            if(searchingNode.openSet){
+                let distToA = searchingNode.g
+                let distToAFromB = Node.g(searchingNode,currentNode)
+
+                if(distToAFromB < distToA){
+                    searchingNode.g = distToAFromB
+                    calculateHeuristic2(searchingNode,endNode)
+                    searchingNode.f = searchingNode.g + searchingNode.h
+                    searchingNode.parent = currentNode
+                }
+            } else { // never seen before node
+                searchingNode.openSet = true;
+                openSet.push(searchingNode)
+                searchingNode.g = Node.g(searchingNode,currentNode)
+                calculateHeuristic2(searchingNode,endNode)
+                searchingNode.f = searchingNode.g + searchingNode.h
+                searchingNode.parent = currentNode
+            }
+
+        }
+    }
+}
+
+
+function aTestStar2(startNode, endNode, priorityQueue=new PriorityQueue(function(){return this.val.f})){ //todo fix this g function
+    priorityQueue.clear()
+    Node.resetAllColors(nodes)
+    //init open sets with startNode
+    let openSet = priorityQueue
+    let pnode = openSet.createNode(startNode)
+    startNode.priorityQueueNode = pnode
+    startNode.f = startNode.g = 0;
+    let closedSet = [];
+
+    //loop until openset is empty
+    while(!openSet.isEmpty()){
+
+        //get node with lowest f value
+        let currentNode = (openSet.getMin()).getFullValue()
+        //move node to closedSet
+        currentNode.closedSet = true
+        currentNode.openSet = false;
+        closedSet.push(currentNode)
+        openSet.popSmallest()
+
+        //we found the goal
+        if(currentNode === endNode){
+            let ancestorNode = currentNode
+            let path = [ancestorNode]
+            while(ancestorNode.parent != null){
+                path.push(ancestorNode.parent)
+                ancestorNode = ancestorNode.parent
+            }
+            return path;
+        }
+
+
+        let adjacents = currentNode.neighbors
+        //loop through adjacent nodes
+        for(let i = 0; i < adjacents.length; i++){
+            let searchingNode = adjacents[i]
+            if(searchingNode.closedSet || !searchingNode.walkable) continue //747ms
+            //if adjacent node is in the openset, see if the path to it is better
+            if(searchingNode.openSet){
+                let distToA = searchingNode.g
+                let distToAFromB = Node.g(searchingNode,currentNode)
+
+                if(distToAFromB < distToA){
+                    searchingNode.g = distToAFromB
+                    calculateHeuristic2(searchingNode,endNode)
+                    searchingNode.f = searchingNode.g + searchingNode.h
+                    searchingNode.parent = currentNode //todo bubble up node after it changes
+                    openSet.bubbleUpOrDown(searchingNode.priorityQueueNode.pos)
+                    searchingNode.setColor(color(128,0,(searchingNode.h/126)*255))
+                }
+            } else { // never seen before node
+                searchingNode.openSet = true;
+                searchingNode.g = Node.g(searchingNode,currentNode)
+                calculateHeuristic2(searchingNode,endNode)
+                searchingNode.f = searchingNode.g + searchingNode.h
+                searchingNode.parent = currentNode
+                searchingNode.priorityQueueNode = openSet.createNode(searchingNode)
+                searchingNode.setColor(color(128,0,(searchingNode.h/126)*255))
             }
 
         }
