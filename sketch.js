@@ -1,10 +1,12 @@
 const COLS = 64;
 const ROWS = 64;
 const windowRatio = window.innerHeight / window.innerWidth; //TODO: make the canvas exactly fit each pixel TODOTODO: canvas doesnt fit each pixel because stepsizes are floored
-const width = Math.floor((window.innerWidth * windowRatio) * 0.9);
-const height = Math.floor((window.innerHeight) * 0.9);
-const stepSizeX = Math.floor(width / COLS);
-const stepSizeY = Math.floor(height / ROWS);
+const maxPossibleWidth = Math.floor((window.innerWidth * windowRatio) * 0.95);
+const maxPossibleHeight = Math.floor((window.innerHeight ) * 0.95);
+const stepSizeX = Math.floor(maxPossibleWidth / COLS);
+const stepSizeY = Math.floor(maxPossibleHeight / ROWS);
+const width = stepSizeX * COLS
+const height = stepSizeY * ROWS
 
 let nodes = [];
 let priorityQueue = new PriorityQueue(function(){return this.val.f})
