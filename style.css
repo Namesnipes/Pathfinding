@@ -1,6 +1,15 @@
+#sketch-container{
+  display: flex;
+  justify-content: center;
+  flex-direction: row-reverse;
+}
+#info{
+  width: 200px;
+  padding: 10px;
+}
+
 canvas{
     border: 1px solid black;
-    display: block;
     margin: 0 auto;
 }
 
